@@ -1,6 +1,4 @@
-# PyTauri + Vue
-
-This template should help get you started developing with PyTauri and Vue 3.
+![src/assets/banner.png](src/assets/banner.png)
 
 ## Getting started
 
