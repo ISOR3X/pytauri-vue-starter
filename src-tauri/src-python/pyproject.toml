@@ -1,0 +1,17 @@
+[project]
+name = "pytauri-vue-starter"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "you" }
+]
+requires-python = ">=3.12"
+dependencies = ["pytauri == 0.3.*"]
+
+[project.entry-points.pytauri]
+ext_mod = "pytauri_vue_starter.ext_mod"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
