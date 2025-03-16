@@ -19,7 +19,7 @@ You can then run the app with:
 npm run tauri dev
 ```
 
-### Setting up for development in IntelliJ IDEAs
+### Setting up for development in JetBrains IDEAs
 
 ##### Webstorm - for frontend development
 

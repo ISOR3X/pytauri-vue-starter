@@ -7,7 +7,11 @@ authors = [
     { name = "you" }
 ]
 requires-python = ">=3.12"
-dependencies = ["pytauri == 0.3.*"]
+dependencies = [
+    "pytauri == 0.3.*",
+    "pydantic == 2.*",
+    "anyio == 4.*"
+]
 
 [project.entry-points.pytauri]
 ext_mod = "pytauri_vue_starter.ext_mod"

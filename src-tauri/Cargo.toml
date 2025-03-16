@@ -15,7 +15,7 @@ name = "pytauri_vue_starter_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [[bin]]
-name = "pytauri_vue_starter"
+name = "pytauri-vue-starter"
 path = "src/main.rs"
 required-features = ["pytauri/standalone"]
 
@@ -29,4 +29,5 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 pyo3 = { version = "0.23" }
 pytauri = { version = "0.3" }
+tauri-plugin-pytauri = { version = "0.3" }
 
