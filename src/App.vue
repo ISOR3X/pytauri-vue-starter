@@ -11,14 +11,14 @@ async function greet() {
   const rustMsg = await invoke("greet", {name: name.value});
   // Learn more about PyTauri commands at https://pytauri.github.io/pytauri/latest/usage/concepts/ipc/#calling-python-from-the-frontend
   const pyMsg = await pyInvoke("greet", {name: name.value});
-  greetMsg.value = rustMsg + "\n" + pyMsg.value;
+  greetMsg.value = rustMsg + "\n" + pyMsg;
 
 }
 </script>
 
 <template>
   <main class="container">
-    <h1>Welcome to Tauri + Vue</h1>
+    <h1>Welcome to PyTauri + Vue</h1>
 
     <div class="row">
       <a href="https://vitejs.dev" target="_blank">
@@ -153,7 +153,7 @@ button {
 @media (prefers-color-scheme: dark) {
   :root {
     color: #f6f6f6;
-    background-color: #2f2f2f;
+    background-color: #232323;
   }
 
   a:hover {

@@ -30,9 +30,9 @@ npm run tauri dev
 
 _Requires PyCharm professional_
 
-1. Set the python interpreter (should be the `python.exe` in  `.venv\Scripts`)
+1. Set the python interpreter (should be the `python.exe` in  `.venv\Scripts`).
 2. Open a terminal, make sure the virtual environment is activated.
-3. Install pydevd for PyCharm
+3. Install pydevd for PyCharm.
 ```
 uv pip install pydevd-pycharm~=243.25659.43
 ```
@@ -44,4 +44,4 @@ pydevd_pycharm.settrace('localhost', port=5678, stdoutToServer=True, stderrToSer
 5. Add a new run configuration -> Python Debug Server
 6. IDE host name: `localhost`, Port: `5678`
 7. Run the Python Debug Server before starting the npm server.  
-You can now set breakpoints as you usually would to debug your python code
+You can now set breakpoints as you usually would to debug your python code.
