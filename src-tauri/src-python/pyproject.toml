@@ -10,7 +10,9 @@ requires-python = ">=3.12"
 dependencies = [
     "pytauri == 0.4.*",
     "pydantic == 2.*",
-    "anyio == 4.*"
+    "anyio == 4.*",
+    "aiortc>=1.11.0",
+    "opencv-python == 4.11.0.86"
 ]
 
 [project.entry-points.pytauri]

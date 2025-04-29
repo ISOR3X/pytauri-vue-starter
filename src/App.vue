@@ -2,6 +2,7 @@
 import {ref} from "vue";
 import {invoke} from "@tauri-apps/api/core";
 import {pyInvoke} from "tauri-plugin-pytauri-api";
+import RtcStream from "./components/rtc-stream.vue";
 
 const greetMsg = ref("");
 const name = ref("");
@@ -17,7 +18,7 @@ async function greet() {
 </script>
 
 <template>
-  <main class="container">
+  <main class="container" v-if="false">
     <h1>Welcome to PyTauri + Vue</h1>
 
     <div class="row">
@@ -42,6 +43,7 @@ async function greet() {
     </form>
     <p>{{ greetMsg }}</p>
   </main>
+  <rtc-stream/>
 </template>
 
 <style scoped>
