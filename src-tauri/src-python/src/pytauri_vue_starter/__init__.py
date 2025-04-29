@@ -19,14 +19,14 @@ class Person(BaseModel):
 async def greet(body: Person) -> RootModel[str]:
     return RootModel[str](f"Hello {body.name}! You've been greeted from Python {sys.winver}!")
 
-
-with start_blocking_portal("asyncio") as portal:
-    builder = builder_factory()
-    app = builder.build(
-        BuilderArgs(
-            context_factory(),
-            # 👇
-            invoke_handler=commands.generate_handler(portal),
+def main():
+    with start_blocking_portal("asyncio") as portal:
+        builder = builder_factory()
+        app = builder.build(
+            BuilderArgs(
+                context_factory(),
+                # 👇
+                invoke_handler=commands.generate_handler(portal),
+            )
         )
-    )
-    app.run()
+        app.run()
