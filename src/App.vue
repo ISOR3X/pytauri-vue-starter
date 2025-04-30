@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import {pyInvoke} from "tauri-plugin-pytauri-api";
 import Console from "./components/console.vue";
+import Dialog from "./components/dialog.vue";
 
 async function startTask() {
   await pyInvoke("start_task", {});
@@ -37,6 +38,7 @@ async function stopTask() {
       <button @click="stopTask">Stop task</button>
     </div>
     <Console style="flex-grow: 1"/>
+    <Dialog/>
   </main>
 </template>
 

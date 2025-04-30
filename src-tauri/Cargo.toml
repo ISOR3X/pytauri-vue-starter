@@ -30,4 +30,5 @@ serde_json = "1"
 pyo3 = { version = "0.23" }
 pytauri = { version = "0.4" }
 tauri-plugin-pytauri = { version = "0.4" }
+tauri-plugin-dialog = "2"
 
