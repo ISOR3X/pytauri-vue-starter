@@ -1,8 +1,6 @@
 <script lang="ts" setup>
 import {pyInvoke} from "tauri-plugin-pytauri-api";
-import {onMounted} from "vue";
-import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
-import {listen} from "@tauri-apps/api/event";
+import Console from "./components/console.vue";
 
 async function startTask() {
   await pyInvoke("start_task", {});
@@ -12,23 +10,12 @@ async function stopTask() {
   await pyInvoke("stop_task", {});
 }
 
-const appWebview = getCurrentWebviewWindow();
-onMounted(async () => {
-  console.log("Listening...");
-  await appWebview.listen<string>('log', (event) => {
-    console.log(event.payload)
-  })
-  await listen("log", (event) => {
-    console.log(event.payload)
-    console.log("t")
-  })
-})
+
 </script>
 
 <template>
   <main class="container">
     <h1>Welcome to PyTauri + Vue</h1>
-
     <div class="row">
       <a href="https://vitejs.dev" target="_blank">
         <img alt="Vite logo" class="logo vite" src="/vite.svg"/>
@@ -49,6 +36,7 @@ onMounted(async () => {
       <button @click="startTask">Start task</button>
       <button @click="stopTask">Stop task</button>
     </div>
+    <Console style="flex-grow: 1"/>
   </main>
 </template>
 
@@ -67,6 +55,10 @@ onMounted(async () => {
 
 </style>
 <style>
+html {
+  height: 100%;
+}
+
 :root {
   font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
   font-size: 16px;
@@ -83,13 +75,22 @@ onMounted(async () => {
   -webkit-text-size-adjust: 100%;
 }
 
+body {
+  margin: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
 .container {
   margin: 0;
-  padding-top: 10vh;
   display: flex;
+  gap: 1em;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   text-align: center;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
 }
 
 .logo {
@@ -158,9 +159,6 @@ button {
   outline: none;
 }
 
-#greet-input {
-  margin-right: 5px;
-}
 
 @media (prefers-color-scheme: dark) {
   :root {
