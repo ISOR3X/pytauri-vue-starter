@@ -1,19 +1,5 @@
 <script lang="ts" setup>
-import {ref} from "vue";
-import {invoke} from "@tauri-apps/api/core";
-import {pyInvoke} from "tauri-plugin-pytauri-api";
-
-const greetMsg = ref("");
-const name = ref("");
-
-async function greet() {
-  // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-  const rustMsg = await invoke("greet", {name: name.value});
-  // Learn more about PyTauri commands at https://pytauri.github.io/pytauri/latest/usage/concepts/ipc/#calling-python-from-the-frontend
-  const pyMsg = await pyInvoke("greet", {name: name.value});
-  greetMsg.value = rustMsg + "\n" + pyMsg;
-
-}
+import ImageStream from "./components/image-stream.vue";
 </script>
 
 <template>
@@ -36,11 +22,7 @@ async function greet() {
     </div>
     <p>Click on the Vite, Tauri, Vue and PyTauri logos to learn more.</p>
 
-    <form class="row" @submit.prevent="greet">
-      <input id="greet-input" v-model="name" placeholder="Enter a name..."/>
-      <button type="submit">Greet</button>
-    </form>
-    <p>{{ greetMsg }}</p>
+    <ImageStream/>
   </main>
 </template>
 
@@ -75,13 +57,19 @@ async function greet() {
   -webkit-text-size-adjust: 100%;
 }
 
+body {
+  margin: 0;
+  max-height: 100vh;
+  //overflow: hidden;
+}
+
 .container {
   margin: 0;
-  padding-top: 10vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   text-align: center;
+  height: 100vh;
 }
 
 .logo {
