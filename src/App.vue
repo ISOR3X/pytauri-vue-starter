@@ -1,19 +1,28 @@
 <script lang="ts" setup>
-import {ref} from "vue";
-import {invoke} from "@tauri-apps/api/core";
 import {pyInvoke} from "tauri-plugin-pytauri-api";
+import {onMounted} from "vue";
+import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
+import {listen} from "@tauri-apps/api/event";
 
-const greetMsg = ref("");
-const name = ref("");
-
-async function greet() {
-  // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-  const rustMsg = await invoke("greet", {name: name.value});
-  // Learn more about PyTauri commands at https://pytauri.github.io/pytauri/latest/usage/concepts/ipc/#calling-python-from-the-frontend
-  const pyMsg = await pyInvoke("greet", {name: name.value});
-  greetMsg.value = rustMsg + "\n" + pyMsg;
-
+async function startTask() {
+  await pyInvoke("start_task", {});
 }
+
+async function stopTask() {
+  await pyInvoke("stop_task", {});
+}
+
+const appWebview = getCurrentWebviewWindow();
+onMounted(async () => {
+  console.log("Listening...");
+  await appWebview.listen<string>('log', (event) => {
+    console.log(event.payload)
+  })
+  await listen("log", (event) => {
+    console.log(event.payload)
+    console.log("t")
+  })
+})
 </script>
 
 <template>
@@ -36,11 +45,10 @@ async function greet() {
     </div>
     <p>Click on the Vite, Tauri, Vue and PyTauri logos to learn more.</p>
 
-    <form class="row" @submit.prevent="greet">
-      <input id="greet-input" v-model="name" placeholder="Enter a name..."/>
-      <button type="submit">Greet</button>
-    </form>
-    <p>{{ greetMsg }}</p>
+    <div class="row form">
+      <button @click="startTask">Start task</button>
+      <button @click="stopTask">Stop task</button>
+    </div>
   </main>
 </template>
 
@@ -98,6 +106,10 @@ async function greet() {
 .row {
   display: flex;
   justify-content: center;
+}
+
+div.row.form {
+  gap: 1em;
 }
 
 a {

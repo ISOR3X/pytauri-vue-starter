@@ -1,31 +1,52 @@
-import sys
+import asyncio
+from typing import Optional
 
 from anyio.from_thread import start_blocking_portal
-from pydantic import BaseModel, RootModel
 from pytauri import (
     BuilderArgs,
-    builder_factory,
-    context_factory, Commands,
+    Commands, builder_factory, context_factory,
 )
+from pytauri.ipc import InvokeException
+from pytauri.webview import WebviewWindow
+
+from pytauri_vue_starter.my_task import MyTask
 
 commands: Commands = Commands()
 
-
-class Person(BaseModel):
-    name: str
+_background_task: Optional[asyncio.Task[None]] = None
 
 
 @commands.command()
-async def greet(body: Person) -> RootModel[str]:
-    return RootModel[str](f"Hello {body.name}! You've been greeted from Python {sys.winver}!")
+async def start_task(
+        body: bytes, webview_window: WebviewWindow
+) -> bytes:
+    global _background_task
+
+    if _background_task is not None:
+        raise InvokeException("Background task already running")
+
+    task = MyTask("background task", webview_window)
+    _background_task = asyncio.create_task(task.run())
+    return b"null"
+
+
+@commands.command()
+async def stop_task(body: bytes) -> bytes:
+    global _background_task
+
+    if _background_task is None:
+        raise InvokeException("Background task not running")
+
+    _background_task.cancel()
+    _background_task = None
+    return b"null"
+
 
 def main():
     with start_blocking_portal("asyncio") as portal:
-        builder = builder_factory()
-        app = builder.build(
+        app = builder_factory().build(
             BuilderArgs(
-                context_factory(),
-                # 👇
+                context=context_factory(),
                 invoke_handler=commands.generate_handler(portal),
             )
         )
