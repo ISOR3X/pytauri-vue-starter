@@ -12,7 +12,7 @@ class CustomVideoStreamTrack(VideoStreamTrack):
         self.logger = logging.getLogger("candela")
         self.logger.info(f"Initializing camera with shm name: {port}")
 
-        self.cap = cv2.VideoCapture(port)
+        self.cap = cv2.VideoCapture(port, cv2.CAP_DSHOW)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         self.cap.set(cv2.CAP_PROP_FPS, 30)

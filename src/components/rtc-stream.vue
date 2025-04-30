@@ -14,6 +14,8 @@ onMounted(async () => {
   start();
 
   const mod = await pyInvoke<RTCSessionDescriptionInit>("socket", {})
+  console.log("WebSocket message received:", mod);
+  console.log("Received SDP offer from server");
 
   if (pc == undefined) {
     console.log("No peer connection");
