@@ -1,14 +1,16 @@
+import asyncio
 import logging
+import platform
 import sys
 
 from aiortc import RTCPeerConnection, RTCSessionDescription
+from aiortc.contrib.media import MediaRelay, MediaPlayer
 from anyio.from_thread import start_blocking_portal
 from pydantic import BaseModel
 from pytauri import (
     BuilderArgs,
     builder_factory,
     context_factory, Commands, )
-from pytauri.webview import WebviewWindow
 
 from pytauri_vue_starter.customvideostreamtrack import CustomVideoStreamTrack
 
@@ -23,53 +25,64 @@ class RTCModel(BaseModel):
     type: str
 
 
-pc: RTCPeerConnection | None = None
+relay = None
+webcam = None
+pcs: set[RTCPeerConnection] = set()
+
+
+def create_local_tracks():
+    global relay, webcam
+
+    options = {"framerate": "30", "video_size": "640x480"}
+    if relay is None:
+        if platform.system() == "Darwin":
+            webcam = MediaPlayer(
+                "default:none", format="avfoundation", options=options
+            )
+        elif platform.system() == "Windows":
+            webcam = MediaPlayer(
+                "video=HP HD Camera", format="dshow", options=options
+            )
+        else:
+            webcam = MediaPlayer("/dev/video0", format="v4l2", options=options)
+        relay = MediaRelay()
+    return None, relay.subscribe(webcam.video)
 
 
 @commands.command()
-async def socket(body: bytes) -> RTCModel:
-    global pc
-    camera_name = 0
-
-    logger.info("WebSocket connection accepted")
+async def offer(body: RTCModel) -> RTCModel:
+    _offer = RTCSessionDescription(sdp=body.sdp, type=body.type)
 
     pc = RTCPeerConnection()
-
-    logger.info(f"Creating video track with camera name: {camera_name}")
-
-    video_sender = CustomVideoStreamTrack(camera_name)
-    pc.addTrack(video_sender)
-
-    @pc.on("datachannel")
-    def on_datachannel(channel):
-        logger.info(f"Data channel established: {channel.label}")
+    pcs.add(pc)
 
     @pc.on("connectionstatechange")
     async def on_connectionstatechange():
-        logger.info(f"Connection state is {pc.connectionState}")
-        if pc.connectionState == "connected":
-            logger.info("WebRTC connection established successfully")
-        elif pc.connectionState == "failed":
-            logger.error("WebRTC connection failed")
+        print("Connection state is %s" % pc.connectionState)
+        if pc.connectionState == "failed":
+            await pc.close()
+            pcs.discard(pc)
 
-    logger.info("Creating offer")
-    offer = await pc.createOffer()
-    await pc.setLocalDescription(offer)
+    # open media source
+    _, video = create_local_tracks()
 
-    return RTCModel(sdp=offer.sdp, type=offer.type)
+    if video:
+        pc.addTrack(video)
+
+    await pc.setRemoteDescription(_offer)
+
+    answer = await pc.createAnswer()
+    await pc.setLocalDescription(answer)
+
+    return RTCModel(sdp=pc.localDescription.sdp, type=pc.localDescription.type)
 
 
 @commands.command()
-async def socket2(body: RTCModel, webview_window: WebviewWindow) -> bytes:
-    global pc
-    logger.info(f"Received answer from client: {body}")
-
-    answer = RTCSessionDescription(
-        sdp=body.sdp, type=body.type
-    )
-    await pc.setRemoteDescription(answer)
-    logger.info("Remote description set successfully")
-
+async def on_shutdown() -> bytes:
+    # close peer connections
+    coros = [pc.close() for pc in pcs]
+    await asyncio.gather(*coros)
+    pcs.clear()
     return b"null"
 
 

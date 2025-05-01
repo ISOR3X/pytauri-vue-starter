@@ -1,130 +1,104 @@
 <script setup lang="ts">
 
-import {onMounted, onUnmounted, ref, useTemplateRef} from "vue";
+import {ref, useTemplateRef} from "vue";
 import {pyInvoke} from "tauri-plugin-pytauri-api";
 
+let pc: RTCPeerConnection | null = null;
+const video = useTemplateRef<HTMLVideoElement>("video");
+const checked = ref(false);
 
-let pc: RTCPeerConnection | undefined = undefined;
-
-const videoElement = useTemplateRef<HTMLVideoElement>('video')
-const streamState = ref('CLOSED')
-
-
-onMounted(async () => {
-  start();
-
-  const mod = await pyInvoke<RTCSessionDescriptionInit>("socket", {})
-  console.log("WebSocket message received:", mod);
-  console.log("Received SDP offer from server");
-
-  if (pc == undefined) {
-    console.log("No peer connection");
-    return
-  }
-
-  await pc.setRemoteDescription({sdp: mod.sdp, type: mod.type});
-
-  console.log("Remote description set successfully");
-
-  const answer = await pc.createAnswer();
-  await pc.setLocalDescription(answer);
-
-  await pyInvoke("socket2", {
-    sdp: answer.sdp,
-    type: answer.type
-  });
-
-  console.log("Answer sent to server");
-})
-
-onUnmounted(() => {
-  stop()
-})
-
-function createPeerConnection() {
-  console.log('Creating peer connection');
-  const config = {
-    sdpSemantics: 'unified-plan',
-    iceServers: [{urls: ['stun:stun.l.google.com:19302']}]
-  };
-
-  pc = new RTCPeerConnection(config);
-
-  pc.addEventListener('track', function (evt) {
-    console.log('Track event:', evt);
-    if (evt.track.kind === 'video') {
-      console.log('Video track received, setting as source');
-
-      if (!evt.streams[0]) {
-        console.error('No stream found in track event');
-        return;
+function negotiate() {
+  if (pc == null) return;
+  pc.addTransceiver('video', {direction: 'recvonly'});
+  pc.addTransceiver('audio', {direction: 'recvonly'});
+  return pc.createOffer().then((offer) => {
+    return pc!.setLocalDescription(offer);
+  }).then(() => {
+    // wait for ICE gathering to complete
+    return new Promise((resolve) => {
+      if (pc!.iceGatheringState === 'complete') {
+        resolve(null);
+      } else {
+        const checkState = () => {
+          if (pc!.iceGatheringState === 'complete') {
+            pc!.removeEventListener('icegatheringstatechange', checkState);
+            resolve(null);
+          }
+        };
+        pc!.addEventListener('icegatheringstatechange', checkState);
       }
-      videoElement.value!.srcObject = evt.streams[0];
-
-      videoElement.value!.onloadedmetadata = function () {
-        console.log('Video metadata loaded, video dimensions:', videoElement.value!.videoWidth, 'x', videoElement.value!.videoHeight);
-      };
-
-      videoElement.value!.onplay = function () {
-        console.log('Video playback started');
-        streamState.value = 'OPEN';
-      };
-
-      videoElement.value!.onerror = function (e) {
-        console.error('Video error:', e);
-      };
-    }
+    });
+  }).then(() => {
+    const offer = pc!.localDescription;
+    return pyInvoke<RTCSessionDescriptionInit>('offer', {
+      sdp: offer!.sdp,
+      type: offer!.type
+    });
+  }).then((response) => {
+    return response;
+  }).then((answer) => {
+    return pc!.setRemoteDescription(answer);
+  }).catch((e) => {
+    alert(e);
   });
-
-  return pc;
 }
 
 function start() {
-  streamState.value = 'CONNECTING';
-  pc = createPeerConnection();
+  const config: any = {
+    sdpSemantics: 'unified-plan'
+  };
+
+  if (checked) {
+    config.iceServers = [{urls: ['stun:stun.l.google.com:19302']}];
+  }
+
+  pc = new RTCPeerConnection(config);
+
+  // connect audio / video
+  pc.addEventListener('track', (evt) => {
+    if (evt.track.kind == 'video') {
+      video.value!.srcObject = evt.streams[0];
+    } else {
+    }
+  });
+
+
+  negotiate();
+
 }
 
 function stop() {
-  if (videoElement.value && videoElement.value.srcObject) {
-    (videoElement.value.srcObject as MediaStream).getTracks().forEach(track => track.stop());
-    videoElement.value.srcObject = null;
-  }
-
-  // close transceivers
-  if (pc && pc.getTransceivers) {
-    pc.getTransceivers().forEach(function (transceiver) {
-      if (transceiver.stop) {
-        transceiver.stop();
-      }
-    });
-  }
-
-  // close local audio / video
-  if (pc) {
-    console.log('Closing peer connection');
-    streamState.value = 'CLOSED';
-    pc.getSenders().forEach(function (sender) {
-      if (sender.track) {
-        sender.track.stop();
-      }
-    });
-
-    // close peer connection
-    setTimeout(function () {
-      if (pc == null) {
-        return;
-      }
-      pc.close();
-      pc = undefined;
-    }, 500);
-  }
+  // close peer connection
+  setTimeout(() => {
+    pc!.close();
+  }, 500);
 }
+
 </script>
 
 <template>
-  <video ref="video" autoplay playsinline style="background-color: #6bae75;"/>
+  <div class="control-container">
+    <button @click="start">start</button>
+    <button @click="stop">stop</button>
+    <span><input v-model="checked" type="checkbox">Use STUN</span>
+  </div>
+  <video ref="video" autoplay playsinline/>
 </template>
 
 <style scoped>
 
+video {
+  object-fit: contain;
+  flex-grow: 1;
+  flex-shrink: 1;
+  height: 10rem;
+  margin-bottom: 1rem;
+}
+
+.control-container {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+}
 </style>

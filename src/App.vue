@@ -18,7 +18,7 @@ async function greet() {
 </script>
 
 <template>
-  <main class="container" v-if="false">
+  <main class="container">
     <h1>Welcome to PyTauri + Vue</h1>
 
     <div class="row">
@@ -37,13 +37,8 @@ async function greet() {
     </div>
     <p>Click on the Vite, Tauri, Vue and PyTauri logos to learn more.</p>
 
-    <form class="row" @submit.prevent="greet">
-      <input id="greet-input" v-model="name" placeholder="Enter a name..."/>
-      <button type="submit">Greet</button>
-    </form>
-    <p>{{ greetMsg }}</p>
+    <rtc-stream/>
   </main>
-  <rtc-stream/>
 </template>
 
 <style scoped>
@@ -77,18 +72,23 @@ async function greet() {
   -webkit-text-size-adjust: 100%;
 }
 
+body {
+  margin: 0;
+}
+
 .container {
   margin: 0;
-  padding-top: 10vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   text-align: center;
+  gap: 1rem;
 }
 
 .logo {
-  height: 6em;
-  padding: 1.5em;
+  height: 4em;
+  padding: 0.5em;
   will-change: filter;
   transition: 0.75s;
 }
