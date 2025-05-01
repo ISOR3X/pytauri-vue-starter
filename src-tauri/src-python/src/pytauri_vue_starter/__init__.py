@@ -1,4 +1,6 @@
 import asyncio
+from typing import Optional
+import asyncio
 import logging
 import sys
 
@@ -16,6 +18,12 @@ from pytauri_vue_starter.video_controller.producer_thread import VideoProducerTh
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    Commands, builder_factory, context_factory,
+)
+from pytauri.ipc import InvokeException
+from pytauri.webview import WebviewWindow
+
+from pytauri_vue_starter.my_task import MyTask
 
 commands: Commands = Commands()
 
@@ -37,9 +45,34 @@ def create_local_tracks():
         webcam = ConsumerTrack()
         relay = MediaRelay()
     return None, relay.subscribe(webcam)
+_background_task: Optional[asyncio.Task[None]] = None
 
 
 @commands.command()
+async def start_task(
+        body: bytes, webview_window: WebviewWindow
+) -> bytes:
+    global _background_task
+
+    if _background_task is not None:
+        raise InvokeException("Background task already running")
+
+    task = MyTask("background task", webview_window)
+    _background_task = asyncio.create_task(task.run())
+    return b"null"
+
+
+@commands.command()
+async def stop_task(body: bytes) -> bytes:
+    global _background_task
+
+    if _background_task is None:
+        raise InvokeException("Background task not running")
+
+    _background_task.cancel()
+    _background_task = None
+    return b"null"
+
 async def offer(body: RTCModel) -> RTCModel:
     _offer = RTCSessionDescription(sdp=body.sdp, type=body.type)
 

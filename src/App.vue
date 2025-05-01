@@ -2,19 +2,18 @@
 import {ref} from "vue";
 import {invoke} from "@tauri-apps/api/core";
 import {pyInvoke} from "tauri-plugin-pytauri-api";
-import RtcStream from "./components/rtc-stream.vue";
+import Console from "./components/console.vue";
+import Dialog from "./components/dialog.vue";
 
-const greetMsg = ref("");
-const name = ref("");
-
-async function greet() {
-  // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-  const rustMsg = await invoke("greet", {name: name.value});
-  // Learn more about PyTauri commands at https://pytauri.github.io/pytauri/latest/usage/concepts/ipc/#calling-python-from-the-frontend
-  const pyMsg = await pyInvoke("greet", {name: name.value});
-  greetMsg.value = rustMsg + "\n" + pyMsg;
-
+async function startTask() {
+  await pyInvoke("start_task", {});
 }
+
+async function stopTask() {
+  await pyInvoke("stop_task", {});
+}
+
+
 </script>
 
 <template>
@@ -37,6 +36,12 @@ async function greet() {
     </div>
     <p>Click on the Vite, Tauri, Vue and PyTauri logos to learn more.</p>
 
+    <div class="row form">
+      <button @click="startTask">Start task</button>
+      <button @click="stopTask">Stop task</button>
+    </div>
+    <Console style="flex-grow: 1"/>
+    <Dialog/>
     <rtc-stream/>
   </main>
 </template>
@@ -74,15 +79,21 @@ async function greet() {
 
 body {
   margin: 0;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .container {
   margin: 0;
   height: 100vh;
   display: flex;
+  gap: 1em;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   text-align: center;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
   gap: 1rem;
 }
 
@@ -100,6 +111,10 @@ body {
 .row {
   display: flex;
   justify-content: center;
+}
+
+div.row.form {
+  gap: 1em;
 }
 
 a {
