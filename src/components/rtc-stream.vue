@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import {ref, useTemplateRef} from "vue";
+import {onMounted, onUnmounted, ref, useTemplateRef} from "vue";
 import {pyInvoke} from "tauri-plugin-pytauri-api";
 
 let pc: RTCPeerConnection | null = null;
@@ -10,7 +10,6 @@ const checked = ref(false);
 function negotiate() {
   if (pc == null) return;
   pc.addTransceiver('video', {direction: 'recvonly'});
-  pc.addTransceiver('audio', {direction: 'recvonly'});
   return pc.createOffer().then((offer) => {
     return pc!.setLocalDescription(offer);
   }).then(() => {
@@ -54,14 +53,13 @@ function start() {
 
   pc = new RTCPeerConnection(config);
 
-  // connect audio / video
+  // connect video
   pc.addEventListener('track', (evt) => {
     if (evt.track.kind == 'video') {
       video.value!.srcObject = evt.streams[0];
     } else {
     }
   });
-
 
   negotiate();
 
@@ -74,14 +72,17 @@ function stop() {
   }, 500);
 }
 
+onMounted(() => {
+  start();
+})
+
+onUnmounted(() => {
+  stop();
+})
+
 </script>
 
 <template>
-  <div class="control-container">
-    <button @click="start">start</button>
-    <button @click="stop">stop</button>
-    <span><input v-model="checked" type="checkbox">Use STUN</span>
-  </div>
   <video ref="video" autoplay playsinline/>
 </template>
 
@@ -95,10 +96,4 @@ video {
   margin-bottom: 1rem;
 }
 
-.control-container {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  justify-content: center;
-}
 </style>

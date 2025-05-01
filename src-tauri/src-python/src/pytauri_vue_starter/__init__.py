@@ -1,10 +1,10 @@
 import asyncio
 import logging
-import platform
 import sys
+import time
 
 from aiortc import RTCPeerConnection, RTCSessionDescription
-from aiortc.contrib.media import MediaRelay, MediaPlayer
+from aiortc.contrib.media import MediaRelay
 from anyio.from_thread import start_blocking_portal
 from pydantic import BaseModel
 from pytauri import (
@@ -12,7 +12,8 @@ from pytauri import (
     builder_factory,
     context_factory, Commands, )
 
-from pytauri_vue_starter.customvideostreamtrack import CustomVideoStreamTrack
+from pytauri_vue_starter.video_controller.consumer_track import ConsumerTrack
+from pytauri_vue_starter.video_controller.producer_process import VideoProducerProcess
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -33,20 +34,10 @@ pcs: set[RTCPeerConnection] = set()
 def create_local_tracks():
     global relay, webcam
 
-    options = {"framerate": "30", "video_size": "640x480"}
     if relay is None:
-        if platform.system() == "Darwin":
-            webcam = MediaPlayer(
-                "default:none", format="avfoundation", options=options
-            )
-        elif platform.system() == "Windows":
-            webcam = MediaPlayer(
-                "video=HP HD Camera", format="dshow", options=options
-            )
-        else:
-            webcam = MediaPlayer("/dev/video0", format="v4l2", options=options)
+        webcam = ConsumerTrack()
         relay = MediaRelay()
-    return None, relay.subscribe(webcam.video)
+    return None, relay.subscribe(webcam)
 
 
 @commands.command()
@@ -79,21 +70,31 @@ async def offer(body: RTCModel) -> RTCModel:
 
 @commands.command()
 async def on_shutdown() -> bytes:
-    # close peer connections
-    coros = [pc.close() for pc in pcs]
-    await asyncio.gather(*coros)
+    # close RTC peer connections
+    rtc_close_calls = [pc.close() for pc in pcs]
+    await asyncio.gather(*rtc_close_calls)
     pcs.clear()
     return b"null"
 
 
 def main():
-    with start_blocking_portal("asyncio") as portal:
-        builder = builder_factory()
-        app = builder.build(
-            BuilderArgs(
-                context_factory(),
-                # 👇
-                invoke_handler=commands.generate_handler(portal),
+    vpp = VideoProducerProcess(
+        camera_name="video=HP HD Camera",
+        framerate=30,
+        resolution=(1280, 720)
+    )
+
+    try:
+        vpp.start()
+
+        with start_blocking_portal("asyncio") as portal:
+            builder = builder_factory()
+            app = builder.build(
+                BuilderArgs(
+                    context_factory(),
+                    invoke_handler=commands.generate_handler(portal),
+                )
             )
-        )
-        app.run()
+            app.run()
+    finally:
+        vpp.terminate()
