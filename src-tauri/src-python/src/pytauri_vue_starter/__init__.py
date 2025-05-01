@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import sys
-import time
 
 from aiortc import RTCPeerConnection, RTCSessionDescription
 from aiortc.contrib.media import MediaRelay
@@ -13,7 +12,7 @@ from pytauri import (
     context_factory, Commands, )
 
 from pytauri_vue_starter.video_controller.consumer_track import ConsumerTrack
-from pytauri_vue_starter.video_controller.producer_process import VideoProducerProcess
+from pytauri_vue_starter.video_controller.producer_thread import VideoProducerThread
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -78,7 +77,7 @@ async def on_shutdown() -> bytes:
 
 
 def main():
-    vpp = VideoProducerProcess(
+    vpp = VideoProducerThread(
         camera_name="video=HP HD Camera",
         framerate=30,
         resolution=(1280, 720)
@@ -86,6 +85,7 @@ def main():
 
     try:
         vpp.start()
+        vpp.has_initialized.wait()
 
         with start_blocking_portal("asyncio") as portal:
             builder = builder_factory()

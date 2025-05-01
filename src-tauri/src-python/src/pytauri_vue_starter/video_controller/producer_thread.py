@@ -1,7 +1,7 @@
 import asyncio
-import multiprocessing
-from multiprocessing import Process
+import threading
 from multiprocessing.shared_memory import SharedMemory
+from threading import Thread
 
 import cv2
 import numpy as np
@@ -9,11 +9,11 @@ from aiortc.contrib.media import MediaPlayer
 from av import VideoFrame
 
 
-class VideoProducerProcess(Process):
+class VideoProducerThread(Thread):
     def __init__(self, camera_name="video=HP HD Camera", framerate: int = 30, resolution: tuple[int, int] = (1280, 720),
                  shm_name="vpp_frame"):
         """
-        Initializes the producer process.
+        Initializes the producer thread.
 
         :param camera_name: A string representing the name or identifier of the camera device.
         :param framerate: Integer is representing the video framerate in frames per second.
@@ -26,12 +26,13 @@ class VideoProducerProcess(Process):
         self.shm_name = shm_name
         self.options = {"framerate": str(framerate), "video_size": "x".join(map(str, resolution))}
 
-        self.exit = multiprocessing.Event()
+        self.exit = threading.Event()
+        self._has_initialized = threading.Event()
         self.shm: SharedMemory | None = None
 
     @property
-    def has_initialized(self) -> bool:
-        return self.shm is not None
+    def has_initialized(self):
+        return self._has_initialized
 
     async def _async_run(self):
         mp = MediaPlayer(
@@ -44,6 +45,8 @@ class VideoProducerProcess(Process):
         assert isinstance(frame, VideoFrame)
         frame_array = frame.to_ndarray(format="rgb24")
         self.shm = SharedMemory(self.shm_name, create=True, size=frame_array.nbytes)
+
+        self._has_initialized.set()
 
         while not self.exit.is_set():
             frame = await video_track.recv()
@@ -65,6 +68,6 @@ class VideoProducerProcess(Process):
 
     def terminate(self):
         self.exit.set()
-        self.shm.close()
-        self.shm.unlink()
-        super().terminate()
+        if self.shm:
+            self.shm.close()
+            self.shm.unlink()

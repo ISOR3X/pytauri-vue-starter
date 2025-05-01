@@ -6,21 +6,21 @@ import numpy
 from aiortc.contrib.media import MediaPlayer
 from av import VideoFrame
 
-from pytauri_vue_starter.video_controller.consumer_process import VideoConsumerProcess
-from pytauri_vue_starter.video_controller.producer_process import VideoProducerProcess
+from pytauri_vue_starter.video_controller.consumer_thread import VideoConsumerThread
+from pytauri_vue_starter.video_controller.producer_thread import VideoProducerThread
 
 
 async def main():
-    vpp = VideoProducerProcess(
+    vpp = VideoProducerThread(
         camera_name="video=HP HD Camera",
         framerate=30,
         resolution=(1280, 720)
     )
-    vpp.start()
 
+    vpp.start()
     time.sleep(2)
 
-    vcp = VideoConsumerProcess(resolution=(1280,720))
+    vcp = VideoConsumerThread(resolution=(1280,720))
     vcp.start()
 
     vcp.join(timeout=10)
