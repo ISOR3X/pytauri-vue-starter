@@ -1,8 +1,7 @@
 import asyncio
-from typing import Optional
-import asyncio
 import logging
 import sys
+from typing import Optional
 
 from aiortc import RTCPeerConnection, RTCSessionDescription
 from aiortc.contrib.media import MediaRelay
@@ -12,30 +11,28 @@ from pytauri import (
     BuilderArgs,
     builder_factory,
     context_factory, Commands, )
+from pytauri.ipc import InvokeException
+from pytauri.webview import WebviewWindow
 
+from pytauri_vue_starter.my_task import MyTask
 from pytauri_vue_starter.video_controller.consumer_track import ConsumerTrack
 from pytauri_vue_starter.video_controller.producer_thread import VideoProducerThread
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-    Commands, builder_factory, context_factory,
-)
-from pytauri.ipc import InvokeException
-from pytauri.webview import WebviewWindow
-
-from pytauri_vue_starter.my_task import MyTask
 
 commands: Commands = Commands()
+
+_background_task: Optional[asyncio.Task[None]] = None
+
+relay = None
+webcam = None
+pcs: set[RTCPeerConnection] = set()
 
 
 class RTCModel(BaseModel):
     sdp: str
     type: str
-
-
-relay = None
-webcam = None
-pcs: set[RTCPeerConnection] = set()
 
 
 def create_local_tracks():
@@ -45,13 +42,11 @@ def create_local_tracks():
         webcam = ConsumerTrack()
         relay = MediaRelay()
     return None, relay.subscribe(webcam)
-_background_task: Optional[asyncio.Task[None]] = None
 
 
 @commands.command()
-async def start_task(
-        body: bytes, webview_window: WebviewWindow
-) -> bytes:
+async def start_task(webview_window: WebviewWindow
+                     ) -> bytes:
     global _background_task
 
     if _background_task is not None:
@@ -63,7 +58,7 @@ async def start_task(
 
 
 @commands.command()
-async def stop_task(body: bytes) -> bytes:
+async def stop_task() -> bytes:
     global _background_task
 
     if _background_task is None:
@@ -73,6 +68,7 @@ async def stop_task(body: bytes) -> bytes:
     _background_task = None
     return b"null"
 
+@commands.command()
 async def offer(body: RTCModel) -> RTCModel:
     _offer = RTCSessionDescription(sdp=body.sdp, type=body.type)
 

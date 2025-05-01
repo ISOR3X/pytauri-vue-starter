@@ -90,10 +90,8 @@ onUnmounted(() => {
 
 video {
   object-fit: contain;
-  flex-grow: 1;
-  flex-shrink: 1;
   height: 10rem;
-  margin-bottom: 1rem;
+  width: 100%;
 }
 
 </style>

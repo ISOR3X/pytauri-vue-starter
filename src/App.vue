@@ -1,9 +1,8 @@
 <script lang="ts" setup>
-import {ref} from "vue";
-import {invoke} from "@tauri-apps/api/core";
 import {pyInvoke} from "tauri-plugin-pytauri-api";
 import Console from "./components/console.vue";
 import Dialog from "./components/dialog.vue";
+import RtcStream from "./components/rtc-stream.vue";
 
 async function startTask() {
   await pyInvoke("start_task", {});
@@ -36,14 +35,18 @@ async function stopTask() {
     </div>
     <p>Click on the Vite, Tauri, Vue and PyTauri logos to learn more.</p>
 
-    <div class="row form">
-      <button @click="startTask">Start task</button>
-      <button @click="stopTask">Stop task</button>
+    <div class="sub-container">
+      <div>
+        <div class="row form">
+          <button @click="startTask">Start task</button>
+          <button @click="stopTask">Stop task</button>
+        </div>
+        <Console style="flex-grow: 1"/>
+      </div>
+      <rtc-stream/>
     </div>
-    <Console style="flex-grow: 1"/>
-    <Dialog/>
-    <rtc-stream/>
   </main>
+  <Dialog/>
 </template>
 
 <style scoped>
@@ -87,14 +90,20 @@ body {
   margin: 0;
   height: 100vh;
   display: flex;
-  gap: 1em;
   flex-direction: column;
   justify-content: flex-start;
   text-align: center;
-  height: 100vh;
   max-height: 100vh;
   overflow: hidden;
   gap: 1rem;
+}
+
+.sub-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-inline: 1rem;
+  flex-grow: 1;
+  margin-bottom: 1rem;
 }
 
 .logo {
@@ -115,6 +124,7 @@ body {
 
 div.row.form {
   gap: 1em;
+  margin-bottom: 1em;
 }
 
 a {
@@ -161,10 +171,6 @@ button:active {
 input,
 button {
   outline: none;
-}
-
-#greet-input {
-  margin-right: 5px;
 }
 
 @media (prefers-color-scheme: dark) {
