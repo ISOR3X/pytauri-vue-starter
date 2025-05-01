@@ -73,7 +73,9 @@ function stop() {
 }
 
 onMounted(() => {
-  start();
+  setTimeout(() => {
+    start();
+  }, 2 * 1000)
 })
 
 onUnmounted(() => {
