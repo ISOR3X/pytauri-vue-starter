@@ -42,21 +42,18 @@ onMounted(async () => {
 .console-container {
   display: flex;
   flex-direction: column;
-  min-height: 100px;
   background-color: color-mix(in oklch, transparent, black 20%);
   padding: 0.5rem 0 0.5rem 0.5rem;
-  box-sizing: border-box;
+  flex-grow: 1;
+  height: 0;
 }
 
 ul {
-  flex: 1;
-  overflow-y: auto;
+  overflow-y: scroll;
   scrollbar-width: thin;
   scrollbar-color: color-mix(in oklch, transparent, white 50%) transparent;
   margin: 0;
   padding: 0 0.5rem 0 0;
-  //height: 100%;
-  box-sizing: border-box;
 }
 
 li {

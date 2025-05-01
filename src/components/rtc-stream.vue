@@ -90,7 +90,6 @@ onUnmounted(() => {
 
 video {
   object-fit: contain;
-  height: 10rem;
   width: 100%;
 }
 

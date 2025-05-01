@@ -36,12 +36,12 @@ async function stopTask() {
     <p>Click on the Vite, Tauri, Vue and PyTauri logos to learn more.</p>
 
     <div class="sub-container">
-      <div>
+      <div class="form-container">
+        <Console/>
         <div class="row form">
           <button @click="startTask">Start task</button>
           <button @click="stopTask">Stop task</button>
         </div>
-        <Console style="flex-grow: 1"/>
       </div>
       <rtc-stream/>
     </div>
@@ -104,6 +104,12 @@ body {
   margin-inline: 1rem;
   flex-grow: 1;
   margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.form-container {
+  display: flex;
+  flex-direction: column;
 }
 
 .logo {
@@ -124,7 +130,7 @@ body {
 
 div.row.form {
   gap: 1em;
-  margin-bottom: 1em;
+  margin-top: 1em;
 }
 
 a {
